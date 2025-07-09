@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysqlbd1
+    environment:
+      MYSQL_ROOT_PASSWORD: stack
+      MYSQL_DATABASE: employees
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - ./datalake:/data
+    restart: always
+
+  airflow:
+    image: apache/airflow:2.1.1-python3.8
+    container_name: airflow
+    ports:
+      - "8080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__FERNET_KEY=asupersecretfernetkey1234567890==
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=False
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    entrypoint: >
+      /bin/bash -c "
+      airflow db init &&
+      airflow users create --username admin --password stack --firstname Felipe --lastname Lastname --role Admin --email admin@example.org &&
+      airflow webserver & airflow scheduler"
+    restart: always
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
