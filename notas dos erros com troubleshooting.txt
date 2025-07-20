@@ -6,3 +6,6 @@ Ver images: docker images
 Deletar images: docker rmi -f [id]
 ver execuções: docker container ps
 docker run --rm -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001"
+
+AirFlow:
+docker run -d -p 8080:8080 -v "./airflow/dags:/opt/airflow/dags/" --entrypoint=/bin/bash --name airflow apache/airflow:2.1.1-python3.8 -c '(airflow db init && airflow users create --username admin --password stack --firstname Raphael --lastname Medeiros --role Admin --email admin@example.org); airflow webserver & airflow scheduler'
